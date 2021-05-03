@@ -169,7 +169,7 @@ public class Model {
 	public List<Fermata> trovaCammino(Fermata partenza, Fermata arrivo) {
 		this.fermateRaggiungibili(partenza);
 		//List<Fermata> result = new ArrayList<>();
-		List<Fermata> result = new LinkedList<>(); //dovendo ogno volta aggiungere in testa meglio usare la linked perchè l'array sposta ogni volta tutti gli oggetti
+		List<Fermata> result = new LinkedList<>(); //dovendo ogni volta aggiungere in testa meglio usare la linked perchè l'array sposta ogni volta tutti gli oggetti
 		result.add(arrivo);
 		Fermata f = arrivo;
 		while(predecessore.get(f)!=null) {

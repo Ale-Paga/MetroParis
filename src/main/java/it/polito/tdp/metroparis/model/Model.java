@@ -1,11 +1,18 @@
 package it.polito.tdp.metroparis.model;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
+import org.jgrapht.event.ConnectedComponentTraversalEvent;
+import org.jgrapht.event.EdgeTraversalEvent;
+import org.jgrapht.event.TraversalListener;
+import org.jgrapht.event.VertexTraversalEvent;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.SimpleGraph;
 import org.jgrapht.traverse.BreadthFirstIterator;
@@ -16,12 +23,13 @@ import it.polito.tdp.metroparis.db.MetroDAO;
 public class Model {
 	
 	Graph<Fermata, DefaultEdge> grafo;
+	Map<Fermata, Fermata> predecessore;
 	
 	public void creaGrafo() {
 		this.grafo = new SimpleGraph<>(DefaultEdge.class);
 		
 		MetroDAO dao = new MetroDAO();
-		List<Fermata> fermate = dao.getAllFermate();
+		List<Fermata> fermate = dao.getAllFermate();  //<fermata arrivo, fermata da dove arrivo>
 		
 		//for(Fermata f: fermate) {
 			//this.grafo.addVertex(f);
@@ -84,6 +92,48 @@ public class Model {
 	//facciamo visita in ampiezza
 	public List<Fermata> fermateRaggiungibili(Fermata partenza){
 		BreadthFirstIterator<Fermata, DefaultEdge> bfv = new BreadthFirstIterator<>(this.grafo, partenza);
+		this.predecessore= new HashMap<>();
+		this.predecessore.put(partenza, null);
+		
+		bfv.addTraversalListener(new TraversalListener<Fermata, DefaultEdge>() {   //ci serve a registrare gli step di iterazione e quindi risalire l'albero di visita
+			
+			@Override
+			public void vertexTraversed(VertexTraversalEvent<Fermata> e) {  //si attiva quando attraverso vertice
+				//System.out.println(e.getVertex());
+			//	Fermata nuova = e.getVertex();
+			//	Fermata precedente = null ; //vertice adiacente a 'nuova' che sia già raggiunto (cioè è già presente nelle key della mappa)
+			//	predecessore.put(nuova, precedente);
+			}
+			
+			@Override
+			public void vertexFinished(VertexTraversalEvent<Fermata> e) {				
+			}
+			
+			@Override
+			public void edgeTraversed(EdgeTraversalEvent<DefaultEdge> e) {			//si attiva quando attraverso arco (utile perché ci da pure i due vertici)	
+				DefaultEdge arco = e.getEdge();
+				Fermata a = grafo.getEdgeSource(arco); //vertice di partenza 
+				Fermata b = grafo.getEdgeTarget(arco); //vertice di arrivo 
+				//ho scoperto 'a' arrivando da 'b' (se 'b' lo conoscevo già e quindi è una delle key della map)
+				if(predecessore.containsKey(b) && !predecessore.containsKey(a)) {
+					predecessore.put(a, b);
+					//System.out.println(a+" scoperto da "+b);
+				}else if(predecessore.containsKey(a) && !predecessore.containsKey(b)){
+					//di sicuro conoscevo 'a' e quindi ho scoperto 'b'
+					predecessore.put(b, a);
+					//System.out.println(b+" scoperto da "+a);
+				}
+			}
+			
+			@Override
+			public void connectedComponentStarted(ConnectedComponentTraversalEvent e) {				
+			}
+			
+			@Override
+			public void connectedComponentFinished(ConnectedComponentTraversalEvent e) {				
+			}
+		});
+		
 		List <Fermata> result = new ArrayList<>();
 		
 		while(bfv.hasNext()) {  //ogni volta che hasNext è vero vuol dire che ci sono altri vertici da scorprire
@@ -112,6 +162,22 @@ public class Model {
 			}
 		}
 		return null;
+	}
+	
+	
+	//ora possiamo costruire i cammini
+	public List<Fermata> trovaCammino(Fermata partenza, Fermata arrivo) {
+		this.fermateRaggiungibili(partenza);
+		//List<Fermata> result = new ArrayList<>();
+		List<Fermata> result = new LinkedList<>(); //dovendo ogno volta aggiungere in testa meglio usare la linked perchè l'array sposta ogni volta tutti gli oggetti
+		result.add(arrivo);
+		Fermata f = arrivo;
+		while(predecessore.get(f)!=null) {
+			f=predecessore.get(f);
+			result.add(0,f);
+			
+		}
+		return result;
 	}
 
 }

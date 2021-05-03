@@ -14,11 +14,15 @@ public class TestModel {
 			System.out.println("Fermata non trovata");
 		}else {
 		List<Fermata> raggiungibili = m.fermateRaggiungibili(p);
-		List<Fermata> raggiungibili2 = m.fermateRaggiungibili2(p);
+		//List<Fermata> raggiungibili2 = m.fermateRaggiungibili2(p);
 		System.out.println(raggiungibili);
-		System.out.println(raggiungibili2);
+		//System.out.println(raggiungibili2);
 		}
 
+		Fermata a = m.trovaFermata("Temple");
+		
+		List<Fermata> percorso = m.trovaCammino(p, a);
+		System.out.println(percorso);
 	}
 
 }

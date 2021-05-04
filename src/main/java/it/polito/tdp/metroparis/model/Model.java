@@ -111,7 +111,7 @@ public class Model {
 			
 			@Override
 			public void edgeTraversed(EdgeTraversalEvent<DefaultEdge> e) {			//si attiva quando attraverso arco (utile perché ci da pure i due vertici)	
-				DefaultEdge arco = e.getEdge();
+				DefaultEdge arco = e.getEdge();										//tutto questo si poteva evitare usando il comando getParent per il metodo trova cammino (NB questo nel DepthFirstIterator non ci sta)
 				Fermata a = grafo.getEdgeSource(arco); //vertice di partenza 
 				Fermata b = grafo.getEdgeTarget(arco); //vertice di arrivo 
 				//ho scoperto 'a' arrivando da 'b' (se 'b' lo conoscevo già e quindi è una delle key della map)
@@ -172,12 +172,35 @@ public class Model {
 		List<Fermata> result = new LinkedList<>(); //dovendo ogni volta aggiungere in testa meglio usare la linked perchè l'array sposta ogni volta tutti gli oggetti
 		result.add(arrivo);
 		Fermata f = arrivo;
-		while(predecessore.get(f)!=null) {
+		while(predecessore.get(f)!=null) {  //qua potevo usare il getParent
 			f=predecessore.get(f);
 			result.add(0,f);
 			
 		}
+		
+		
 		return result;
 	}
+	
+	// Implementazione di 'trovaCammino' che NON usa il traversal listener ma sfrutta
+		// il metodo getParent presente in BreadthFirstIterator
+		public List<Fermata> trovaCammino2(Fermata partenza, Fermata arrivo) {
+			BreadthFirstIterator<Fermata, DefaultEdge> bfv = 
+					new BreadthFirstIterator<Fermata, DefaultEdge>(this.grafo, partenza) ;
+			
+			// fai lavorare l'iteratore per trovare tutti i vertici
+			while(bfv.hasNext())
+				bfv.next() ; // non mi serve il valore
+			
+			List<Fermata> result = new LinkedList<>() ;
+			Fermata f = arrivo ;
+			while(f!=null) {
+				result.add(f) ;
+				f = bfv.getParent(f) ;
+			}
+			
+			return result ;
+			
+		}
 
 }
